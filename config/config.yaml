@@ -1,0 +1,290 @@
+subinfo_fields:
+  - name: subject_id
+    type: int
+    constraints:
+      min: 101
+      max: 999
+      digits: 3
+
+subinfo_mapping:
+  subject_id: Subject ID (3 digits)
+  Participant Information: Participant Information
+  registration_failed: Registration failed
+  registration_successful: Registration successful
+  invalid_input: "{field} is invalid"
+
+window:
+  size: [1280, 720]
+  units: pix
+  screen: 0
+  bg_color: black
+  fullscreen: true
+  fullscreen_lock_escape: true
+  monitor_width_cm: 35.5
+  monitor_distance_cm: 60
+
+task:
+  task_name: task_switching_preview
+  save_path: ./outputs/human
+  total_blocks: 2
+  total_trials: 96
+  trial_per_block: 48
+  conditions: [cued_switching]
+  key_list: ["f", "j", "space"]
+  left_key: f
+  right_key: j
+  seed_mode: same_across_sub
+  overall_seed: 2025
+  delta: 1
+  language: Chinese
+  voice_name: zh-CN-YunyangNeural
+  voice_enabled: false
+  input_mode: keyboard
+  hide_cursor: true
+  force_quit_enabled: true
+  force_quit_shortcut: ctrl+q
+  rule_names:
+    parity: Parity Rule
+    magnitude: Magnitude Rule
+  trial_type_names:
+    start: Start
+    repeat: Repeat
+    switch: Switch
+  response_labels:
+    parity:
+      left: Odd
+      right: Even
+    magnitude:
+      left: Less than 5
+      right: Greater than 5
+
+timing:
+  fixation_duration: [0.3, 0.6]
+  cue_duration: 0.6
+  decision_deadline: 2.0
+  feedback_duration: 0.8
+  iti_duration: [0.3, 0.6]
+
+stimuli:
+  instruction_text:
+    type: text
+    text: |
+      Task Switching Experiment
+
+      Each trial starts with a rule cue, then a target digit appears.
+
+      Rule 1: parity judgment (odd/even)
+      Rule 2: magnitude judgment (less than 5 / greater than 5)
+
+      The key mapping is shown for the active rule in each trial.
+      Respond as quickly and accurately as possible.
+
+      Press Space to begin.
+    color: white
+    height: 29
+    wrapWidth: 1080
+    pos: [0, 60]
+    font: SimHei
+
+  fixation:
+    type: text
+    text: "+"
+    color: "#ebebeb"
+    height: 52
+    pos: [0, 0]
+    font: SimHei
+
+  cue_title:
+    type: text
+    text: "Prepare for the current rule"
+    color: "#f2f2ea"
+    height: 34
+    wrapWidth: 980
+    pos: [0, 290]
+    font: SimHei
+
+  score_text:
+    type: text
+    text: "Current score: {current_score}"
+    color: "#c7f2db"
+    height: 30
+    pos: [0, 245]
+    font: SimHei
+
+  cue_parity:
+    type: text
+    text: "Rule: Parity Judgment"
+    color: "#e6fab3"
+    height: 48
+    wrapWidth: 900
+    pos: [0, 95]
+    font: SimHei
+
+  cue_magnitude:
+    type: text
+    text: "Rule: Magnitude Judgment"
+    color: "#c7e6ff"
+    height: 48
+    wrapWidth: 900
+    pos: [0, 95]
+    font: SimHei
+
+  trial_type_tag:
+    type: text
+    text: "Trial type: {trial_type_cn}"
+    color: "#d9d9d9"
+    height: 26
+    wrapWidth: 800
+    pos: [0, 20]
+    font: SimHei
+
+  rule_prompt:
+    type: text
+    text: "Current rule: {rule_name_cn}"
+    color: "#f5eb9e"
+    height: 32
+    wrapWidth: 900
+    pos: [0, -185]
+    font: SimHei
+
+  key_hint:
+    type: text
+    text: "Keys: {left_key}={left_label_cn}, {right_key}={right_label_cn}"
+    color: "#e5e5e5"
+    height: 28
+    wrapWidth: 980
+    pos: [0, -245]
+    font: SimHei
+
+  target_digit:
+    type: text
+    text: "0"
+    color: "#fafafa"
+    height: 120
+    wrapWidth: 600
+    pos: [0, 10]
+    font: SimHei
+
+  feedback_correct:
+    type: text
+    text: |
+      Correct
+      Your judgment: {predicted_category_cn}
+      Correct category: {correct_category_cn}
+      Score change: {score_delta_signed}
+      Current score: {score_after}
+    color: "#b3f5b3"
+    height: 30
+    wrapWidth: 980
+    pos: [0, 20]
+    font: SimHei
+
+  feedback_incorrect:
+    type: text
+    text: |
+      Incorrect
+      Your judgment: {predicted_category_cn}
+      Correct category: {correct_category_cn}
+      Score change: {score_delta_signed}
+      Current score: {score_after}
+    color: "#ffcab3"
+    height: 30
+    wrapWidth: 980
+    pos: [0, 20]
+    font: SimHei
+
+  feedback_timeout:
+    type: text
+    text: |
+      Timeout on this trial
+      Current rule: {rule_name_cn}
+      Correct category: {correct_category_cn}
+      Current score: {score_after}
+    color: "#ff8080"
+    height: 30
+    wrapWidth: 980
+    pos: [0, 20]
+    font: SimHei
+
+  block_break:
+    type: text
+    text: |
+      Block {block_num}/{total_blocks} complete
+
+      Accuracy: {accuracy}
+      Switch-trial accuracy: {switch_accuracy}
+      Repeat-trial accuracy: {repeat_accuracy}
+      Mean RT: {mean_rt_ms:.0f} ms
+      RT switch cost: {switch_cost_ms_signed} ms
+      Timeouts: {timeout_count}
+      Block net score: {net_score_signed}
+      Total score: {score_end}
+
+      Press Space to continue.
+    color: white
+    height: 25
+    wrapWidth: 1100
+    pos: [0, 0]
+    font: SimHei
+
+  good_bye:
+    type: text
+    text: |
+      Task complete
+
+      Total trials: {total_trials}
+      Overall accuracy: {accuracy}
+      Switch-trial accuracy: {switch_accuracy}
+      Repeat-trial accuracy: {repeat_accuracy}
+      Mean RT: {mean_rt_ms:.0f} ms
+      Mean switch RT: {mean_switch_rt_ms:.0f} ms
+      Mean repeat RT: {mean_repeat_rt_ms:.0f} ms
+      RT switch cost: {switch_cost_ms_signed} ms
+      Timeouts: {timeout_count}
+      Net score: {net_score_signed}
+      Final score: {score_end}
+
+      Press Space to exit.
+    color: white
+    height: 25
+    wrapWidth: 1100
+    pos: [0, 0]
+    font: SimHei
+
+triggers:
+  map:
+    exp_onset: 1
+    exp_end: 2
+    block_onset: 10
+    block_end: 11
+    fixation_onset: 20
+    cue_onset: 30
+    decision_onset: 40
+    choice_left: 41
+    choice_right: 42
+    choice_timeout: 43
+    feedback_correct: 50
+    feedback_incorrect: 51
+    feedback_timeout: 52
+    iti_onset: 60
+
+  driver:
+    type: serial_url
+    url: loop://
+    baudrate: 115200
+
+  timing:
+    post_delay_ms: 1
+
+  policy:
+    strict: false
+
+controller:
+  switch_probability: 0.5
+  digit_pool: [1, 2, 3, 4, 6, 7, 8, 9]
+  initial_score: 0
+  correct_delta: 1
+  incorrect_delta: -1
+  timeout_delta: 0
+  random_seed: null
+  enable_logging: true

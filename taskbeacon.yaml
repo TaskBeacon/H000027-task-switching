@@ -1,0 +1,15 @@
+id: H000027
+slug: task-switching
+title: Task Switching Task
+acquisition: behavior
+variant: html
+cognitive_domain:
+  - cognitive-control
+  - task-switching
+  - executive-function
+maturity: prototype
+version:
+  release_tag: "0.1.0"
+contracts:
+  psyflow_web_taps: v0.1.0
+maintainer: []
