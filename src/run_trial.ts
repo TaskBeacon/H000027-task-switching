@@ -7,6 +7,7 @@ import {
 } from "psyflow-web";
 
 import type { Controller, ScoreUpdate } from "./controller";
+import { parse_task_switching_condition } from "./utils";
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
@@ -103,12 +104,12 @@ export function run_trial(
   }
 ): TrialBuilder {
   const { settings, stimBank, controller, block_id, block_idx } = context;
-  const conditionName = String(condition).trim().toLowerCase();
-  const trialId = controller.next_trial_id();
-  const trialSpec = controller.build_trial();
-  const taskRule = String(trialSpec.task_rule ?? "parity").trim().toLowerCase();
-  const trialType = String(trialSpec.trial_type ?? "repeat").trim().toLowerCase();
-  const targetDigit = Number(trialSpec.digit ?? 1);
+  const parsed = parse_task_switching_condition(condition);
+  const conditionName = parsed.condition;
+  const trialId = trial.trial_id;
+  const taskRule = String(parsed.task_rule ?? "parity").trim().toLowerCase();
+  const trialType = String(parsed.trial_type ?? "repeat").trim().toLowerCase();
+  const targetDigit = Number(parsed.target_digit ?? 1);
 
   const leftKey = String(settings.left_key ?? "f").trim().toLowerCase();
   const rightKey = String(settings.right_key ?? "j").trim().toLowerCase();
@@ -116,12 +117,17 @@ export function run_trial(
   const trialTypeNames = asRecord(settings.trial_type_names);
   const trialTypeLabel = String(trialTypeNames[trialType] ?? trialType);
   const profile = rule_profile(taskRule, targetDigit, leftKey, rightKey, settings);
+  const triggerMap = (settings.triggers ?? {}) as Record<string, unknown>;
+  const trigger = (name: string): number | null => {
+    const value = triggerMap[name];
+    return value == null ? null : Number(value);
+  };
 
-  const fixationDuration = controller.sample_duration(settings.fixation_duration, 0.45);
+  const fixationDuration = parsed.fixation_duration ?? 0.45;
   const cueDuration = Number(settings.cue_duration ?? 0.6);
   const decisionDeadline = Number(settings.decision_deadline ?? 2.0);
   const feedbackDuration = Number(settings.feedback_duration ?? 0.8);
-  const itiDuration = controller.sample_duration(settings.iti_duration, 0.45);
+  const itiDuration = parsed.iti_duration ?? 0.45;
   const currentScore = Number(controller.current_score);
 
   const fixation = trial.unit("fixation").addStim(stimBank.get("fixation"));
@@ -131,7 +137,7 @@ export function run_trial(
     deadline_s: fixationDuration,
     valid_keys: [],
     block_id,
-    condition_id: conditionName,
+    condition_id: parsed.condition_id,
     task_factors: {
       stage: "fixation",
       task_rule: profile.rule,
@@ -141,7 +147,7 @@ export function run_trial(
     },
     stim_id: "fixation"
   });
-  fixation.show({ duration: fixationDuration }).to_dict();
+  fixation.show({ duration: fixationDuration, onset_trigger: trigger("fixation_onset") }).to_dict();
 
   const cueStimId = `cue_${profile.rule}`;
   const cue = trial
@@ -156,7 +162,7 @@ export function run_trial(
     deadline_s: cueDuration,
     valid_keys: [],
     block_id,
-    condition_id: conditionName,
+    condition_id: parsed.condition_id,
     task_factors: {
       stage: "cue",
       task_rule: profile.rule,
@@ -168,7 +174,7 @@ export function run_trial(
     },
     stim_id: `cue_title+score_text+${cueStimId}+trial_type_tag`
   });
-  cue.show({ duration: cueDuration }).to_dict();
+  cue.show({ duration: cueDuration, onset_trigger: trigger("cue_onset") }).to_dict();
 
   const decision = trial
     .unit("decision")
@@ -189,7 +195,7 @@ export function run_trial(
     deadline_s: decisionDeadline,
     valid_keys: responseKeys,
     block_id,
-    condition_id: conditionName,
+    condition_id: parsed.condition_id,
     task_factors: {
       stage: "decision",
       task_rule: profile.rule,
@@ -207,7 +213,13 @@ export function run_trial(
     .captureResponse({
       keys: responseKeys,
       correct_keys: [profile.correct_key],
-      duration: decisionDeadline
+      duration: decisionDeadline,
+      onset_trigger: trigger("decision_onset"),
+      response_trigger: {
+        [leftKey]: Number(triggerMap.choice_left ?? 41),
+        [rightKey]: Number(triggerMap.choice_right ?? 42)
+      },
+      timeout_trigger: trigger("choice_timeout")
     })
     .set_state({
       response_key: (snapshot: TrialSnapshot) => String(snapshot.units.decision?.response ?? "").trim().toLowerCase(),
@@ -265,7 +277,7 @@ export function run_trial(
     return stimBank.get_and_format(feedbackStimId, {
       predicted_category_cn: String(snapshot.units.decision?.predicted_category_cn ?? "none"),
       correct_category_cn: profile.correct_label,
-      score_delta_signed: signed(scorePreview.score_delta),
+      score_delta: scorePreview.score_delta,
       score_after: scorePreview.score_after
     });
   });
@@ -275,7 +287,7 @@ export function run_trial(
     deadline_s: feedbackDuration,
     valid_keys: [],
     block_id,
-    condition_id: conditionName,
+    condition_id: parsed.condition_id,
     task_factors: {
       stage: "feedback",
       task_rule: profile.rule,
@@ -283,9 +295,24 @@ export function run_trial(
       target_digit: targetDigit,
       block_idx
     },
-    stim_id: "feedback"
+    stim_id: (snapshot: TrialSnapshot) => {
+      if (Boolean(snapshot.units.decision?.timed_out ?? true)) {
+        return "feedback_timeout";
+      }
+      return Boolean(snapshot.units.decision?.is_correct ?? false) ? "feedback_correct" : "feedback_incorrect";
+    }
   });
-  feedback.show({ duration: feedbackDuration }).to_dict();
+  feedback.show({
+    duration: feedbackDuration,
+    onset_trigger: (snapshot: TrialSnapshot) => {
+      if (Boolean(snapshot.units.decision?.timed_out ?? true)) {
+        return trigger("feedback_timeout");
+      }
+      return Boolean(snapshot.units.decision?.is_correct ?? false)
+        ? trigger("feedback_correct")
+        : trigger("feedback_incorrect");
+    }
+  }).to_dict();
 
   const iti = trial.unit("inter_trial_interval").addStim(stimBank.get("fixation"));
   set_trial_context(iti, {
@@ -294,14 +321,14 @@ export function run_trial(
     deadline_s: itiDuration,
     valid_keys: [],
     block_id,
-    condition_id: conditionName,
+    condition_id: parsed.condition_id,
     task_factors: {
       stage: "inter_trial_interval",
       block_idx
     },
     stim_id: "fixation"
   });
-  iti.show({ duration: itiDuration }).to_dict();
+  iti.show({ duration: itiDuration, onset_trigger: trigger("iti_onset") }).to_dict();
 
   trial.finalize((snapshot, _runtime, helpers) => {
     const responseKey = String(snapshot.units.decision?.response_key ?? "").trim().toLowerCase();
@@ -321,7 +348,9 @@ export function run_trial(
     helpers.setTrialState("trial_type", trialType);
     helpers.setTrialState("trial_type_cn", trialTypeLabel);
     helpers.setTrialState("target_digit", targetDigit);
-    helpers.setTrialState("switch_trial", Boolean(trialSpec.switch_trial ?? trialType === "switch"));
+    helpers.setTrialState("scheduled_trial_index", parsed.trial_index);
+    helpers.setTrialState("condition_id", parsed.condition_id);
+    helpers.setTrialState("switch_trial", Boolean(parsed.switch_trial ?? trialType === "switch"));
     helpers.setTrialState("left_key", leftKey);
     helpers.setTrialState("right_key", rightKey);
     helpers.setTrialState("left_label_cn", profile.left_label);
@@ -354,7 +383,9 @@ export function run_trial(
       trial_type: trialType,
       trial_type_cn: trialTypeLabel,
       target_digit: targetDigit,
-      switch_trial: Boolean(trialSpec.switch_trial ?? trialType === "switch"),
+      scheduled_trial_index: parsed.trial_index,
+      condition_id: parsed.condition_id,
+      switch_trial: Boolean(parsed.switch_trial ?? trialType === "switch"),
       left_key: leftKey,
       right_key: rightKey,
       left_label_cn: profile.left_label,

@@ -28,8 +28,6 @@ export class Controller {
   previous_rule: "parity" | "magnitude" | null;
   histories: Array<Record<string, unknown>>;
 
-  private readonly rng: () => number;
-
   constructor(args: {
     switch_probability?: number;
     digit_pool?: number[];
@@ -48,7 +46,6 @@ export class Controller {
     this.timeout_delta = Number(args.timeout_delta ?? 0);
     this.random_seed = Number.isFinite(Number(args.random_seed)) ? Number(args.random_seed) : null;
     this.enable_logging = args.enable_logging !== false;
-    this.rng = this.random_seed == null ? () => Math.random() : makeSeededRandom(this.random_seed);
 
     this.current_score = this.initial_score;
     this.block_idx = -1;
@@ -82,47 +79,6 @@ export class Controller {
     this.previous_rule = null;
   }
 
-  next_trial_id(): number {
-    return this.trial_count_total + 1;
-  }
-
-  sample_duration(value: unknown, defaultValue: number): number {
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return Math.max(0, value);
-    }
-    if (Array.isArray(value) && value.length >= 2) {
-      const left = Number(value[0]);
-      const right = Number(value[1]);
-      if (Number.isFinite(left) && Number.isFinite(right)) {
-        const lo = Math.min(left, right);
-        const hi = Math.max(left, right);
-        return Math.max(0, lo + this.rng() * (hi - lo));
-      }
-    }
-    return Math.max(0, defaultValue);
-  }
-
-  build_trial(): TaskSwitchTrialSpec {
-    let taskRule: "parity" | "magnitude";
-    let trialType: "start" | "repeat" | "switch";
-    if (this.previous_rule == null) {
-      taskRule = this.rng() < 0.5 ? "parity" : "magnitude";
-      trialType = "start";
-    } else {
-      const doSwitch = this.rng() < this.switch_probability;
-      taskRule = doSwitch ? (this.previous_rule === "parity" ? "magnitude" : "parity") : this.previous_rule;
-      trialType = taskRule === this.previous_rule ? "repeat" : "switch";
-    }
-    const digit = pick(this.digit_pool, this.rng);
-    this.previous_rule = taskRule;
-    return {
-      task_rule: taskRule,
-      trial_type: trialType,
-      digit,
-      switch_trial: trialType === "switch"
-    };
-  }
-
   apply_score(is_correct: boolean | null): ScoreUpdate {
     const scoreBefore = this.current_score;
     const delta =
@@ -150,20 +106,3 @@ function normalizeDigitPool(raw: number[] | undefined): number[] {
   return values.length > 0 ? values : [1, 2, 3, 4, 6, 7, 8, 9];
 }
 
-function pick<T>(values: T[], rng: () => number): T {
-  if (values.length === 0) {
-    throw new Error("Cannot sample from an empty list.");
-  }
-  const index = Math.floor(rng() * values.length);
-  return values[index];
-}
-
-function makeSeededRandom(seed: number): () => number {
-  let value = seed >>> 0;
-  return () => {
-    value = (value + 0x6d2b79f5) >>> 0;
-    let t = Math.imul(value ^ (value >>> 15), 1 | value);
-    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}

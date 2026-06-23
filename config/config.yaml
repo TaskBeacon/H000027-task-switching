@@ -7,11 +7,11 @@ subinfo_fields:
       digits: 3
 
 subinfo_mapping:
-  subject_id: Subject ID (3 digits)
-  Participant Information: Participant Information
-  registration_failed: Registration failed
-  registration_successful: Registration successful
-  invalid_input: "{field} is invalid"
+  subject_id: 受试者编号（3位）
+  Participant Information: 被试信息
+  registration_failed: 注册失败
+  registration_successful: 注册成功
+  invalid_input: "{field} 输入无效"
 
 window:
   size: [1280, 720]
@@ -24,7 +24,7 @@ window:
   monitor_distance_cm: 60
 
 task:
-  task_name: task_switching_preview
+  task_name: task_switching
   save_path: ./outputs/human
   total_blocks: 2
   total_trials: 96
@@ -44,19 +44,19 @@ task:
   force_quit_enabled: true
   force_quit_shortcut: ctrl+q
   rule_names:
-    parity: Parity Rule
-    magnitude: Magnitude Rule
+    parity: 奇偶判断
+    magnitude: 大小判断
   trial_type_names:
-    start: Start
-    repeat: Repeat
-    switch: Switch
+    start: 起始
+    repeat: 重复
+    switch: 切换
   response_labels:
     parity:
-      left: Odd
-      right: Even
+      left: 奇数
+      right: 偶数
     magnitude:
-      left: Less than 5
-      right: Greater than 5
+      left: 小于5
+      right: 大于5
 
 timing:
   fixation_duration: [0.3, 0.6]
@@ -69,17 +69,17 @@ stimuli:
   instruction_text:
     type: text
     text: |
-      Task Switching Experiment
+      任务切换实验
 
-      Each trial starts with a rule cue, then a target digit appears.
+      每轮会先出现规则线索，然后呈现一个数字。
 
-      Rule 1: parity judgment (odd/even)
-      Rule 2: magnitude judgment (less than 5 / greater than 5)
+      规则1：奇偶判断（奇数/偶数）
+      规则2：大小判断（小于5/大于5）
 
-      The key mapping is shown for the active rule in each trial.
-      Respond as quickly and accurately as possible.
+      按键规则在每轮会随当前规则显示。
+      请尽快并准确作答。
 
-      Press Space to begin.
+      按空格键开始。
     color: white
     height: 29
     wrapWidth: 1080
@@ -96,7 +96,7 @@ stimuli:
 
   cue_title:
     type: text
-    text: "Prepare for the current rule"
+    text: "请准备当前判断规则"
     color: "#f2f2ea"
     height: 34
     wrapWidth: 980
@@ -105,7 +105,7 @@ stimuli:
 
   score_text:
     type: text
-    text: "Current score: {current_score}"
+    text: "当前得分：{current_score}"
     color: "#c7f2db"
     height: 30
     pos: [0, 245]
@@ -113,7 +113,7 @@ stimuli:
 
   cue_parity:
     type: text
-    text: "Rule: Parity Judgment"
+    text: "规则：奇偶判断"
     color: "#e6fab3"
     height: 48
     wrapWidth: 900
@@ -122,7 +122,7 @@ stimuli:
 
   cue_magnitude:
     type: text
-    text: "Rule: Magnitude Judgment"
+    text: "规则：大小判断"
     color: "#c7e6ff"
     height: 48
     wrapWidth: 900
@@ -131,7 +131,7 @@ stimuli:
 
   trial_type_tag:
     type: text
-    text: "Trial type: {trial_type_cn}"
+    text: "本轮类型：{trial_type_cn}"
     color: "#d9d9d9"
     height: 26
     wrapWidth: 800
@@ -140,7 +140,7 @@ stimuli:
 
   rule_prompt:
     type: text
-    text: "Current rule: {rule_name_cn}"
+    text: "当前规则：{rule_name_cn}"
     color: "#f5eb9e"
     height: 32
     wrapWidth: 900
@@ -149,7 +149,7 @@ stimuli:
 
   key_hint:
     type: text
-    text: "Keys: {left_key}={left_label_cn}, {right_key}={right_label_cn}"
+    text: "按键：{left_key}={left_label_cn}，{right_key}={right_label_cn}"
     color: "#e5e5e5"
     height: 28
     wrapWidth: 980
@@ -168,11 +168,11 @@ stimuli:
   feedback_correct:
     type: text
     text: |
-      Correct
-      Your judgment: {predicted_category_cn}
-      Correct category: {correct_category_cn}
-      Score change: {score_delta_signed}
-      Current score: {score_after}
+      正确
+      你的判断：{predicted_category_cn}
+      正确类别：{correct_category_cn}
+      本轮得分变化：{score_delta:+d}
+      当前得分：{score_after}
     color: "#b3f5b3"
     height: 30
     wrapWidth: 980
@@ -182,11 +182,11 @@ stimuli:
   feedback_incorrect:
     type: text
     text: |
-      Incorrect
-      Your judgment: {predicted_category_cn}
-      Correct category: {correct_category_cn}
-      Score change: {score_delta_signed}
-      Current score: {score_after}
+      错误
+      你的判断：{predicted_category_cn}
+      正确类别：{correct_category_cn}
+      本轮得分变化：{score_delta:+d}
+      当前得分：{score_after}
     color: "#ffcab3"
     height: 30
     wrapWidth: 980
@@ -196,10 +196,10 @@ stimuli:
   feedback_timeout:
     type: text
     text: |
-      Timeout on this trial
-      Current rule: {rule_name_cn}
-      Correct category: {correct_category_cn}
-      Current score: {score_after}
+      本轮超时
+      当前规则：{rule_name_cn}
+      正确类别：{correct_category_cn}
+      当前得分：{score_after}
     color: "#ff8080"
     height: 30
     wrapWidth: 980
@@ -209,18 +209,18 @@ stimuli:
   block_break:
     type: text
     text: |
-      Block {block_num}/{total_blocks} complete
+      第 {block_num}/{total_blocks} 组完成
 
-      Accuracy: {accuracy}
-      Switch-trial accuracy: {switch_accuracy}
-      Repeat-trial accuracy: {repeat_accuracy}
-      Mean RT: {mean_rt_ms:.0f} ms
-      RT switch cost: {switch_cost_ms_signed} ms
-      Timeouts: {timeout_count}
-      Block net score: {net_score_signed}
-      Total score: {score_end}
+      准确率：{accuracy:.1%}
+      切换试次准确率：{switch_accuracy:.1%}
+      重复试次准确率：{repeat_accuracy:.1%}
+      平均反应时：{mean_rt_ms:.0f} ms
+      切换代价（RT）：{switch_cost_ms:+.0f} ms
+      超时次数：{timeout_count}
+      本组净得分：{net_score:+d}
+      当前总得分：{score_end}
 
-      Press Space to continue.
+      按空格键继续。
     color: white
     height: 25
     wrapWidth: 1100
@@ -230,21 +230,21 @@ stimuli:
   good_bye:
     type: text
     text: |
-      Task complete
+      任务结束
 
-      Total trials: {total_trials}
-      Overall accuracy: {accuracy}
-      Switch-trial accuracy: {switch_accuracy}
-      Repeat-trial accuracy: {repeat_accuracy}
-      Mean RT: {mean_rt_ms:.0f} ms
-      Mean switch RT: {mean_switch_rt_ms:.0f} ms
-      Mean repeat RT: {mean_repeat_rt_ms:.0f} ms
-      RT switch cost: {switch_cost_ms_signed} ms
-      Timeouts: {timeout_count}
-      Net score: {net_score_signed}
-      Final score: {score_end}
+      总试次数：{total_trials}
+      总体准确率：{accuracy:.1%}
+      切换试次准确率：{switch_accuracy:.1%}
+      重复试次准确率：{repeat_accuracy:.1%}
+      平均反应时：{mean_rt_ms:.0f} ms
+      切换试次平均RT：{mean_switch_rt_ms:.0f} ms
+      重复试次平均RT：{mean_repeat_rt_ms:.0f} ms
+      切换代价（RT）：{switch_cost_ms:+.0f} ms
+      超时次数：{timeout_count}
+      总净得分：{net_score:+d}
+      最终得分：{score_end}
 
-      Press Space to exit.
+      按空格键退出。
     color: white
     height: 25
     wrapWidth: 1100

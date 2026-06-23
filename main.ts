@@ -20,7 +20,7 @@ import {
 import configText from "./config/config.yaml?raw";
 import { Controller } from "./src/controller";
 import { run_trial } from "./src/run_trial";
-import { summarizeBlock, summarizeOverall } from "./src/utils";
+import { generate_task_switching_conditions, summarizeBlock, summarizeOverall } from "./src/utils";
 
 function buildWaitTrial(
   meta: { trial_id: string; condition: string; trial_index: number },
@@ -99,7 +99,18 @@ export async function run(root: HTMLElement): Promise<void> {
           block_idx: blockIndex,
           settings,
           n_trials: trialPerBlock
-        }).generate_conditions();
+        }).generate_conditions({
+          func: generate_task_switching_conditions,
+          args: [
+            controller.switch_probability,
+            controller.digit_pool,
+            settings.fixation_duration,
+            settings.iti_duration,
+            controller.random_seed,
+            blockIndex,
+            controller.enable_logging
+          ]
+        });
 
         block.conditions.forEach((condition, trialIndex) => {
           const trial = new TrialBuilder({
@@ -139,9 +150,9 @@ export async function run(root: HTMLElement): Promise<void> {
                     repeat_accuracy: summary.repeat_accuracy,
                     timeout_count: summary.timeout_count,
                     mean_rt_ms: summary.mean_rt_ms,
-                    switch_cost_ms_signed: summary.switch_cost_ms_signed,
+                    switch_cost_ms: summary.switch_cost_ms,
                     score_end: summary.score_end,
-                    net_score_signed: summary.net_score_signed
+                    net_score: summary.net_score
                   });
                 }
               ]
@@ -171,9 +182,9 @@ export async function run(root: HTMLElement): Promise<void> {
                 mean_rt_ms: summary.mean_rt_ms,
                 mean_switch_rt_ms: summary.mean_switch_rt_ms,
                 mean_repeat_rt_ms: summary.mean_repeat_rt_ms,
-                switch_cost_ms_signed: summary.switch_cost_ms_signed,
+                switch_cost_ms: summary.switch_cost_ms,
                 score_end: summary.score_end,
-                net_score_signed: summary.net_score_signed
+                net_score: summary.net_score
               });
             }
           ]
